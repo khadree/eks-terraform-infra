@@ -1,45 +1,38 @@
-output "vpc_id"  { 
-    description = "VPC ID used in the project for reference"
-    value = module.vpc.vpc_id 
+output "vpc_id" {
+  description = "VPC ID used in the project for reference"
+  value       = module.vpc.vpc_id
 }
 
-output "cluster_endpoint" { 
-    description = "EKS cluster endpoint"
-    value = module.eks.cluster_endpoint 
+output "cluster_endpoint" {
+  description = "EKS cluster endpoint"
+  value       = module.eks.cluster_endpoint
 }
-output "oidc_provider_arn"{ 
-    description = "OIDC provider ARN"
-    value = module.eks.oidc_provider_arn 
+output "oidc_provider_arn" {
+  description = "OIDC provider ARN"
+  value       = module.eks.oidc_provider_arn
 }
-output "db_endpoint" {
-  description = "RDS PostgreSQL endpoint"
-  value       = module.rds.db_endpoint
+# ─── Dynamic Redis Outputs ────────────────────────────────────────────────────
+output "redis_endpoints" {
+  description = "Endpoints for all Redis replication groups"
+  value       = { for name, redis in module.redis : name => redis.redis_endpoint }
 }
-
-output "db_secret_arn" {
-  description = "Secrets Manager ARN for DB credentials"
-  value       = module.rds.secret_arn
+output "rds_secret_arns" {
+  description = "Secret ARNs for all RDS instances"
+  value       = { for name, rds in module.rds : name => rds.secret_arn }
 }
-output "db_endpoint" {
-  description = "RDS PostgreSQL endpoint"
-  value       = module.rds.db_endpoint
+output "all_public_ips" {
+  value = {
+    for name, instance in module.ec2 : name => instance.public_ip
+  }
 }
-
-output "db_secret_arn" {
-  description = "Secrets Manager ARN for DB credentials"
-  value       = module.rds.secret_arn
+output "ec2_instance_ids" {
+  value = { for name, instance in module.ec2 : name => instance.instance_id }
 }
-
-output "instance_public_ip" {
-  value = module.web_server.public_ip
+# ─── Dynamic RDS Outputs ──────────────────────────────────────────────────────
+output "rds_endpoints" {
+  description = "Endpoints for all RDS instances"
+  value       = { for name, rds in module.rds : name => rds.db_endpoint }
 }
-
-output "ec2_instance_id" {
-  description = "EC2 instance ID"
-  value       = module.ec2.instance_id
-}
-
-output "redis_endpoint" {
-  description = "Redis Enpoint"
-  value = module.redis.redis_endpoint
+output "bucket_ids" {
+  value = { for k, v in module.s3 : k => v.bucket_id }
 }

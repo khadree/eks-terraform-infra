@@ -5,5 +5,6 @@ output "oidc_provider_arn"       { value = aws_iam_openid_connect_provider.eks.a
 output "node_role_arn"           { value = aws_iam_role.node_group_role.arn }
 output "node_security_group_id" {
   description = "Security group ID attached to EKS worker nodes"
-  value       = aws_eks_node_group.this.resources[0].remote_access_security_group_id
+  value       = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
 }
+

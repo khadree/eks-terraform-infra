@@ -51,7 +51,7 @@ resource "aws_elasticache_subnet_group" "redis_subnet" {
 
 resource "aws_elasticache_replication_group" "redis" {
 
-  replication_group_id       = "${var.name}-redis"
+  replication_group_id       = "${var.project_name}-${var.environment}-redis"
   description                = "Redis replication group"
 
   engine                     = "redis"
@@ -66,9 +66,9 @@ resource "aws_elasticache_replication_group" "redis" {
   automatic_failover_enabled = false
   multi_az_enabled           = false
 
-  subnet_group_name          = aws_elasticache_subnet_group.redis.name
+  subnet_group_name          = aws_elasticache_subnet_group.redis_subnet.name
 
-  security_group_ids         = [aws_security_group.redis.id]
+  security_group_ids         = [aws_security_group.redis_sg.id]
 
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
@@ -78,3 +78,7 @@ resource "aws_elasticache_replication_group" "redis" {
   }
 
 }
+
+
+# Failover Logic: In AWS, if num_cache_clusters is 1, automatic_failover_enabled must be false. 
+# If it's greater than 1, it should usually be true.

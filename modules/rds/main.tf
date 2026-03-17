@@ -4,6 +4,16 @@ resource "aws_security_group" "rds" {
   name        = "${var.project_name}-${var.environment}-rds-sg"
   description = "Allow PostgreSQL access from EKS nodes only"
   vpc_id      = var.vpc_id
+   dynamic "ingress" {
+    for_each = var.admin_ip != "" ? [1] : []
+    content {
+      description = "PostgreSQL from Admin IP"
+      from_port   = var.db_port
+      to_port     = var.db_port
+      protocol    = "tcp"
+      cidr_blocks = ["${var.admin_ip}/32"]
+    }
+  }
 
   ingress {
     description     = "PostgreSQL from EKS nodes"

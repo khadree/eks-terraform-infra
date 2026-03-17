@@ -37,3 +37,7 @@ output "kms_key_arn" {
   description = "KMS key ARN used for RDS encryption"
   value       = aws_kms_key.rds.arn
 }
+
+output "rds_security_group" {
+  value = aws_security_group.rds
+}

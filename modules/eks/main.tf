@@ -124,6 +124,7 @@ resource "aws_eks_node_group" "this" {
     aws_iam_role_policy_attachment.node_worker_policy,
     aws_iam_role_policy_attachment.node_cni_policy,
     aws_iam_role_policy_attachment.node_ecr_readonly,
+    aws_eks_cluster.this
   ]
 
   tags = { Name = "${var.project_name}-${var.environment}-node-group" }

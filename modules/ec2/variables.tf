@@ -31,3 +31,26 @@ variable "user_data" {
   default     = ""
 }
 
+variable "instance_name" {
+  description = "Name for the EC2 instance"
+  type        = string
+}
+
+variable "ec2_instances" {
+  description = "Map of EC2 instances to create (keyed by instance id/name)."
+  type        = map(any)
+  default     = {}
+}
+
+variable "enable_ssm" {
+  description = "Enable SSM agent for EC2 instance"
+  type        = bool
+  default     = true
+}
+
+variable "associate_public_ip_address" {
+  description = "Asssociate Public address"
+  type        = bool
+}
+
+

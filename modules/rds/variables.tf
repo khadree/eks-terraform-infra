@@ -45,53 +45,53 @@ variable "db_password" {
 variable "db_port" {
   description = "PostgreSQL port"
   type        = number
-  default     = 5432
 }
 
 variable "instance_class" {
   description = "RDS instance type"
   type        = string
-  default     = "db.t3.medium"
 }
 
 variable "allocated_storage" {
   description = "Initial storage in GB"
   type        = number
-  default     = 20
+  
 }
 
 variable "max_allocated_storage" {
   description = "Max storage for autoscaling in GB"
   type        = number
-  default     = 100
 }
 
 variable "postgres_version" {
   description = "PostgreSQL engine version"
   type        = string
-  default     = "15.4"
 }
 
 variable "multi_az" {
   description = "Enable Multi-AZ for high availability"
   type        = bool
-  default     = false
 }
 
 variable "backup_retention_days" {
   description = "Number of days to retain automated backups"
   type        = number
-  default     = 7
+  default     = 7  # Adding a default makes it "optional"
 }
 
 variable "deletion_protection" {
   description = "Prevent accidental deletion of the DB"
   type        = bool
-  default     = true
 }
 
 variable "skip_final_snapshot" {
   description = "Skip final snapshot on destroy (set true for dev only)"
   type        = bool
-  default     = false
+}
+
+
+variable "admin_ip" {
+  type        = string
+  description = "Public IP for DB maintenance"
+  default     = "" # Empty by default so it's optional
 }

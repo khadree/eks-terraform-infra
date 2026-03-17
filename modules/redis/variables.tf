@@ -36,11 +36,6 @@ variable "subnet_ids" {
   type        = list(string)
 }
 
-variable "allowed_security_groups" {
-  description = "Security groups allowed to access Redis"
-  type        = list(string)
-}
-
 variable "node_type" {
   description = "Redis instance type"
   type        = string

@@ -1,16 +1,16 @@
 variable "project_name" {
-    description = "Project name"
-    type        = string
+  description = "Project name"
+  type        = string
 }
 variable "region" {
   description = "AWS region"
-  type        = string  
-}
-
-variable "cluster_name" {
-  description = "EKS Cluster name"
   type        = string
 }
+
+# variable "cluster_name" {
+#   description = "EKS Cluster name"
+#   type        = string
+# }
 
 variable "cluster_version" {
   description = "Kubernetes version"
@@ -43,6 +43,7 @@ variable "db_password" {
   description = "PostgreSQL master password"
   type        = string
   sensitive   = true
+  default     = ""
 }
 
 variable "db_instance_class" {
@@ -51,30 +52,6 @@ variable "db_instance_class" {
   default     = "db.t3.medium"
 }
 
-
-variable "db_name" {
-  description = "PostgreSQL database name"
-  type        = string
-  default     = "appdb"
-}
-
-variable "db_username" {
-  description = "PostgreSQL master username"
-  type        = string
-  default     = "dbadmin"
-}
-
-variable "db_password" {
-  description = "PostgreSQL master password"
-  type        = string
-  sensitive   = true
-}
-
-variable "db_instance_class" {
-  description = "RDS instance type"
-  type        = string
-  default     = "db.t3.medium"
-}
 
 variable "ami_id" {
   description = "AMI ID for the instance"
@@ -86,7 +63,117 @@ variable "instance_type" {
   type        = string
 }
 
-variable "vpc" {
-  
+variable "ec2_instances" {
+  description = "Map of EC2 instances to create (keyed by instance id/name)."
+  type        = map(any)
+  default     = {}
 }
 
+variable "associate_public_ip_address" {
+  description = "VPC ID"
+  type        = bool
+}
+
+# variable "eks" {
+#   description = "Map of EKS cluster to create (keyed by instance id/name)."
+#    type = map(object({
+#     cluster_version     = string
+#     node_instance_types = list(string)
+#     node_desired_size   = number
+#     node_max_size       = number
+#     node_min_size       = number
+#   }))
+# }
+
+variable "node_instance_types" {
+  description = "EKS Instance type"
+  type        = list(string)
+}
+
+variable "node_desired_size" {
+  description = "Number of Instance"
+  type        = number
+}
+
+variable "node_max_size" {
+  description = "Number of max instance needed"
+  type        = number
+}
+
+variable "node_min_size" {
+  description = "Number of minimum Instance needed"
+  type        = number
+}
+
+
+variable "redis" {
+  description = "Map of EKS cluster to create (keyed by instance id/name)."
+  type        = map(any)
+  default     = {}
+}
+
+# variable "rds" {
+#   description = "Map of EKS cluster to create (keyed by instance id/name)."
+#   type        = map(any)
+#   default     = {}
+# }
+variable "admin_ip" {
+  type        = string
+  description = "Public IP for DB maintenance"
+  default     = "" # Empty by default so it's optional
+}
+
+variable "db_port" {
+  description = "PostgreSQL port"
+  type        = number
+  default     = 5432
+}
+
+
+variable "allocated_storage" {
+  description = "Initial storage in GB"
+  type        = number
+  default     = 20
+
+}
+
+variable "max_allocated_storage" {
+  description = "Max storage for autoscaling in GB"
+  type        = number
+  default     = 100
+}
+
+variable "backup_retention_days" {
+  description = "Number of days to retain automated backups"
+  type        = number
+  default     = 7
+}
+variable "postgres_version" {
+  description = "PostgreSQL engine version"
+  type        = string
+  default     = "15.4"
+}
+
+variable "s3_bucket" {
+  description = "Map of S3 bucket to create (keyed by instance id/name)."
+  type        = map(any)
+  default     = {}
+}
+
+variable "rds" {
+  description = "Map of RDS instances to create"
+  type = map(object({
+    postgres_version      = string
+    instance_class        = string
+    allocated_storage     = number
+    max_allocated_storage = number
+    db_name               = string
+    db_username           = string
+    db_password           = string
+    db_port               = number
+    multi_az              = bool
+    backup_retention_days = number
+    deletion_protection   = bool
+    skip_final_snapshot   = bool
+  }))
+}
