@@ -88,7 +88,7 @@ resource "aws_eks_cluster" "this" {
     subnet_ids              = var.private_subnet_ids
     security_group_ids      = [aws_security_group.cluster_sg.id]
     endpoint_private_access = true
-    endpoint_public_access  = true  # Set false for fully private clusters
+    endpoint_public_access  = true
   }
 
   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
@@ -98,7 +98,7 @@ resource "aws_eks_cluster" "this" {
     aws_iam_role_policy_attachment.eks_vpc_resource_controller,
   ]
 
-  tags = { Name = "${var.project_name}-${var.environment}-cluster"  }
+  tags = { Name = "${var.project_name}-${var.environment}-cluster" }
 }
 
 # ─── EKS Managed Node Group ───────────────────────────────────────────────────

@@ -139,7 +139,7 @@ resource "aws_db_instance" "this" {
   # Network
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = [aws_security_group.rds.id]
-  publicly_accessible    = false   # Never expose RDS to public internet
+  publicly_accessible    = true   # Never expose RDS to public internet
 
   # Availability
   multi_az = var.multi_az

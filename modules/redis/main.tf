@@ -41,9 +41,7 @@ resource "aws_elasticache_subnet_group" "redis_subnet" {
 # Generate a secure random password
 resource "random_password" "rd_pass" {
   length           = 20
-  special          = true
-  # Explicitly exclude / @ " and space to satisfy RDS requirements
-  override_special = "!#$%&*()-_=+[]{}<>:?" 
+  special          = false
 }
 # resource "aws_elasticache_cluster" "redis" {
 #   cluster_id           = "${var.project_name}-${var.environment}-redis"
@@ -80,9 +78,9 @@ resource "aws_elasticache_replication_group" "redis" {
 }
 
 resource "aws_secretsmanager_secret" "redis_credentials" {
-  name                    = "${var.project_name}/${var.environment}/rds/credentials"
+  name                    = "${var.project_name}/${var.environment}/redis/credentials"
   description             = "Redis credentials for ${var.project_name} ${var.environment}"
-  kms_key_id              = aws_kms_key.rds.arn
+  # kms_key_id              = aws_kms_key.rds.arn
   recovery_window_in_days = 0
 
   tags = {
@@ -96,7 +94,7 @@ resource "aws_secretsmanager_secret_version" "redis_credentials" {
   secret_string = jsonencode({
     REDIS_PASSWORD = random_password.rd_pass.result
     REDIS_HOST    = aws_elasticache_replication_group.redis.primary_endpoint_address
-    REDIS_URL     = "redis://:${random_password.rd_pass.result}@${aws_elasticache_replication_group.redis.primary_endpoint_address}:${var.port}"
+    REDIS_URL     = "rediss://default:${random_password.rd_pass.result}@${aws_elasticache_replication_group.redis.primary_endpoint_address}:${var.port}"
   })
 }
 # Failover Logic: In AWS, if num_cache_clusters is 1, automatic_failover_enabled must be false. 

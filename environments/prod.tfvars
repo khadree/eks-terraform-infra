@@ -52,6 +52,7 @@ redis = {
   "main-cache" = {
     node_type       = "cache.t2.medium"
     num_cache_nodes = 4
+    port = 6379
   }
 }
 

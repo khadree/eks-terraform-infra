@@ -35,9 +35,9 @@ vpc_cidr = "10.0.0.0/16"
 # }
 cluster_version             = "1.34"
 node_instance_types         = ["t3.medium"]
-node_desired_size           = 1
-node_max_size               = 2
-node_min_size               = 1
+node_desired_size           = 2
+node_max_size               = 3
+node_min_size               = 2
 cluster_name                = "teleios-cluster"
 ami_id                      = "ami-0d1b55a6d77a0c326"
 instance_type               = "t3.medium"
@@ -53,6 +53,7 @@ redis = {
   "main-cache" = {
     node_type       = "cache.t3.medium"
     num_cache_nodes = 1
+    port = 6379
   }
 }
 
