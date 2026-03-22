@@ -3,7 +3,7 @@ module "s3" {
   source             = "./modules/s3"
   project_name       = var.project_name
   environment        = var.environment
-  bucket_name        = "${var.project_name}-${var.environment}-ec2-${each.key}"
+  bucket_name        = "${var.project_name}-${var.environment}-s3-${each.key}"
   versioning_enabled = true
   lifecycle_days     = 30
   tags = {

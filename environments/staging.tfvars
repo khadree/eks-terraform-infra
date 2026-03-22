@@ -1,13 +1,13 @@
 # Global Variables
 project_name = "teleios-kadiri"
-environment  = "dev"
+environment  = "staging"
 region       = "eu-west-1"
 
 # EC2 Instance Configurations
 ec2_instances = {
   "web-server" = {
     ami_id                      = "ami-0d1b55a6d77a0c326" # Replace with your region's AMI
-    instance_type               = "t3.micro"
+    instance_type               = "t3.large"
     associate_public_ip_address = true
     user_data                   = "" # Leave empty to use the module's default script
     subnet_type                 = "public"
@@ -22,7 +22,7 @@ ec2_instances = {
   # #   }
 }
 
-vpc_cidr = "10.0.0.0/16"
+vpc_cidr = "10.1.0.0/16"
 
 # eks = {
 #   "test" = {
@@ -40,13 +40,18 @@ node_max_size               = 2
 node_min_size               = 1
 cluster_name                = "teleios-cluster" # Add this if missing
 ami_id                      = "ami-0d1b55a6d77a0c326"
-instance_type               = "t3.micro"
+instance_type               = "t3.medium"
 associate_public_ip_address = true
+
+##### For Helm config
+enable_cert_manager       = true
+enable_external_secrets   = true
+enable_nginx_ingress      = true
 
 redis = {
   "main-cache" = {
-    node_type       = "cache.t3.micro"
-    num_cache_nodes = 1
+    node_type       = "cache.t3.medium"
+    num_cache_nodes = 2
   }
 }
 
@@ -54,10 +59,10 @@ rds = {
   "database" = {
     # RDS Configuration
     postgres_version      = "15.16"
-    instance_class        = "db.t3.micro"
+    instance_class        = "db.t3.medium"
     allocated_storage     = 20
     max_allocated_storage = 100
-    db_name               = "vprofiledb"
+    db_name               = "netacad"
     db_username           = "dbadmin"
     db_password           = "" # Use a secret manager in prod
     db_port               = 5432

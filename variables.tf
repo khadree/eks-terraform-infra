@@ -177,3 +177,19 @@ variable "rds" {
     skip_final_snapshot   = bool
   }))
 }
+
+
+variable "enable_cert_manager" {
+  type    = bool
+  default = true
+}
+
+variable "enable_external_secrets" {
+  type    = bool
+  default = true
+}
+
+variable "enable_nginx_ingress" {
+  type    = bool
+  default = true
+}

@@ -105,6 +105,13 @@ resource "aws_kms_alias" "rds" {
   target_key_id = aws_kms_key.rds.key_id
 }
 
+# Generate a secure random password
+resource "random_password" "db_master" {
+  length           = 20
+  special          = true
+  # Explicitly exclude / @ " and space to satisfy RDS requirements
+  override_special = "!#$%&*()-_=+[]{}<>:?" 
+}
 # ─── RDS Instance ─────────────────────────────────────────────────────────────
 
 resource "aws_db_instance" "this" {
@@ -126,7 +133,7 @@ resource "aws_db_instance" "this" {
   # Credentials
   db_name  = var.db_name
   username = var.db_username
-  password = var.db_password
+  password = random_password.db_master.result
   port     = var.db_port
 
   # Network
@@ -194,7 +201,7 @@ resource "aws_secretsmanager_secret" "db_credentials" {
   name                    = "${var.project_name}/${var.environment}/rds/credentials"
   description             = "RDS PostgreSQL credentials for ${var.project_name} ${var.environment}"
   kms_key_id              = aws_kms_key.rds.arn
-  recovery_window_in_days = 7
+  recovery_window_in_days = 0
 
   tags = {
     Name        = "${var.project_name}-${var.environment}-db-credentials"
@@ -206,7 +213,7 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
   secret_id = aws_secretsmanager_secret.db_credentials.id
   secret_string = jsonencode({
     username = var.db_username
-    password = var.db_password
+    password = random_password.db_master.result
     host     = aws_db_instance.this.address
     port     = var.db_port
     dbname   = var.db_name

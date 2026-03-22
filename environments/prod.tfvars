@@ -22,7 +22,7 @@ ec2_instances = {
   # #   }
 }
 
-vpc_cidr = "10.0.0.0/16"
+vpc_cidr = "10.2.0.0/16"
 
 # eks = {
 #   "test" = {
@@ -35,18 +35,23 @@ vpc_cidr = "10.0.0.0/16"
 # }
 cluster_version             = "1.34"
 node_instance_types         = ["t3.medium"]
-node_desired_size           = 1
-node_max_size               = 2
-node_min_size               = 1
+node_desired_size           = 2
+node_max_size               = 4
+node_min_size               = 2
 cluster_name                = "teleios-cluster" # Add this if missing
 ami_id                      = "ami-0d1b55a6d77a0c326"
-instance_type               = "t3.micro"
+instance_type               = "t3.medium"
 associate_public_ip_address = true
+
+##### For Helm config
+enable_cert_manager       = true
+enable_external_secrets   = true
+enable_nginx_ingress      = true
 
 redis = {
   "main-cache" = {
-    node_type       = "cache.t3.micro"
-    num_cache_nodes = 1
+    node_type       = "cache.t2.medium"
+    num_cache_nodes = 4
   }
 }
 
@@ -54,7 +59,7 @@ rds = {
   "database" = {
     # RDS Configuration
     postgres_version      = "15.16"
-    instance_class        = "db.t3.micro"
+    instance_class        = "db.t3.medium"
     allocated_storage     = 20
     max_allocated_storage = 100
     db_name               = "vprofiledb"

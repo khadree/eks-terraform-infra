@@ -8,3 +8,7 @@ output "node_security_group_id" {
   value       = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
 }
 
+output "oidc_provider_url" {
+  description = "OIDC provider URL"
+  value       = aws_iam_openid_connect_provider.eks.url
+}

@@ -43,9 +43,9 @@ module "rds" {
   db_port               = each.value.db_port
   backup_retention_days = each.value.backup_retention_days
   multi_az              = var.environment == "prod" ? true : false
-  deletion_protection   = var.environment == "prod" ? true : false
+  # deletion_protection   = var.environment == "prod" ? true : false
   skip_final_snapshot   = var.environment == "prod" ? false : true
-
+  deletion_protection   = each.value.deletion_protection
   # Keep your EKS link logic
   eks_node_security_group_id = module.eks.node_security_group_id
   admin_ip                   = var.admin_ip

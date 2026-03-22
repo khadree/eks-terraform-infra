@@ -55,20 +55,37 @@ resource "aws_subnet" "private" {
   }
 }
 
-# Elastic IPs for NAT Gateways
+# # Elastic IPs for NAT Gateways
+# resource "aws_eip" "nat" {
+#   count  = length(local.azs)
+#   domain = "vpc"
+#   tags   = { Name = "${var.project_name}-${var.environment}-nat-eip-${count.index + 1}" }
+# }
+
+# Single Elastic IP for the NAT Gateway
 resource "aws_eip" "nat" {
-  count  = length(local.azs)
   domain = "vpc"
-  tags   = { Name = "${var.project_name}-${var.environment}-nat-eip-${count.index + 1}" }
+  tags   = { Name = "${var.project_name}-${var.environment}-nat-eip" }
 }
 
-# NAT Gateways (one per AZ for HA)
+# # NAT Gateways (one per AZ for HA)
+# resource "aws_nat_gateway" "this" {
+#   count         = length(local.azs)
+#   allocation_id = aws_eip.nat[count.index].id
+#   subnet_id     = aws_subnet.public[count.index].id
+#   tags          = { Name = "${var.project_name}-${var.environment}-nat-${count.index + 1}" }
+#   depends_on    = [aws_internet_gateway.this]
+# }
+
+# Single NAT Gateway for cost optimization
 resource "aws_nat_gateway" "this" {
-  count         = length(local.azs)
-  allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public[count.index].id
-  tags          = { Name = "${var.project_name}-${var.environment}-nat-${count.index + 1}" }
-  depends_on    = [aws_internet_gateway.this]
+  # count         = 1
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id 
+  tags = { 
+    Name = "${var.project_name}-${var.environment}-nat-single" 
+  } 
+  depends_on = [aws_internet_gateway.this]
 }
 
 # Public Route Table
@@ -87,21 +104,40 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# Private Route Tables (one per AZ)
+# # Private Route Tables (one per AZ)
+# resource "aws_route_table" "private" {
+#   count  = length(local.azs)
+#   vpc_id = aws_vpc.this.id
+#   route {
+#     cidr_block     = "0.0.0.0/0"
+#     nat_gateway_id = aws_nat_gateway.this[count.index].id
+#   }
+#   tags = { Name = "${var.project_name}-${var.environment}-private-rt-${count.index + 1}" }
+# }
+
+# Single Private Route Table for all AZs
 resource "aws_route_table" "private" {
-  count  = length(local.azs)
   vpc_id = aws_vpc.this.id
+
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.this[count.index].id
+    nat_gateway_id = aws_nat_gateway.this.id
   }
-  tags = { Name = "${var.project_name}-${var.environment}-private-rt-${count.index + 1}" }
+
+  tags = { Name = "${var.project_name}-${var.environment}-private-rt" }
 }
 
+# resource "aws_route_table_association" "private" {
+#   count          = length(local.azs)
+#   subnet_id      = aws_subnet.private[count.index].id
+#   route_table_id = aws_route_table.private[count.index].id
+# }
+
+# Single Private Route Table Assosiation for all AZs
 resource "aws_route_table_association" "private" {
   count          = length(local.azs)
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private[count.index].id
+  route_table_id = aws_route_table.private.id
 }
 
 // Load balancer Security Group
@@ -140,7 +176,7 @@ resource "aws_lb" "vprofileLB" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.lb_sg.id]
   subnets = [for s in aws_subnet.public : s.id]
-#   tags = { 
-#     Name = "${var.project_name}-${var.environment}-alb" 
-#     }
+  tags = { 
+    Name = "${var.project_name}-${var.environment}-alb" 
+    }
 }
