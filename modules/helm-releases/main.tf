@@ -96,13 +96,13 @@ data "aws_iam_policy_document" "cert_manager_assume" {
 
 resource "aws_iam_role" "cert_manager" {
   count              = var.enable_cert_manager ? 1 : 0
-  name               = "${var.cluster_name}-cert-manager"
+  name               = "${var.project_name}-${var.environment}-cert-manager"
   assume_role_policy = data.aws_iam_policy_document.cert_manager_assume[0].json
 }
 
 resource "aws_iam_role_policy" "cert_manager_route53" {
   count = var.enable_cert_manager ? 1 : 0
-  name  = "${var.cluster_name}-cert-manager-route53"
+  name  = "${var.project_name}-${var.environment}-cert-manager-route53"
   role  = aws_iam_role.cert_manager[0].id
 
   policy = jsonencode({
@@ -194,7 +194,7 @@ data "aws_iam_policy_document" "external_secrets_assume" {
 
 resource "aws_iam_role" "external_secrets" {
   count              = var.enable_external_secrets ? 1 : 0
-  name               = "${var.cluster_name}-external-secrets"
+  name               = "${var.project_name}-${var.environment}-external-secrets"
   assume_role_policy = data.aws_iam_policy_document.external_secrets_assume[0].json
 }
 
@@ -213,7 +213,10 @@ resource "aws_iam_role_policy" "external_secrets" {
           "secretsmanager:DescribeSecret",
           "secretsmanager:ListSecrets"
         ]
-        Resource = "arn:aws:secretsmanager:*:*:secret:${var.cluster_name}/*"
+        Resource = [
+          "arn:aws:secretsmanager:*:*:secret:rideshare/*",
+          "arn:aws:secretsmanager:*:*:secret:${var.project_name}-${var.environment}/*"
+        ] 
       },
       {
         Effect = "Allow"
@@ -222,7 +225,7 @@ resource "aws_iam_role_policy" "external_secrets" {
           "ssm:GetParameters",
           "ssm:GetParametersByPath"
         ]
-        Resource = "arn:aws:ssm:*:*:parameter/${var.cluster_name}/*"
+        Resource = "arn:aws:ssm:*:*:parameter/${var.project_name}-${var.environment}/*"
       }
     ]
   })
@@ -235,12 +238,15 @@ resource "helm_release" "external_secrets" {
   chart      = "external-secrets"
   version    = var.external_secrets_version
   namespace  = kubernetes_namespace.external_secrets[0].metadata[0].name
-
+  timeout    = 600
   set {
-    name  = "installCRDs"
+    name  = "crds.create"
     value = "true"
   }
-
+  set {
+    name  = "crds.keep"
+    value = "true"
+  }
   set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = aws_iam_role.external_secrets[0].arn
@@ -272,7 +278,7 @@ resource "kubectl_manifest" "cluster_secret_store" {
       provider = {
         aws = {
           service = "SecretsManager"
-          region  = data.aws_region.current.name
+          region  = data.aws_region.current.id
           auth = {
             jwt = {
               serviceAccountRef = {
