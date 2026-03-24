@@ -169,6 +169,38 @@ resource "helm_release" "cert_manager" {
   depends_on = [kubernetes_namespace.cert_manager]
 }
 
+#  ClusterIssuer — must be created AFTER cert-manager is installed
+resource "kubectl_manifest" "letsencrypt_prod" {
+  count = var.enable_cert_manager ? 1 : 0
+
+  yaml_body = yamlencode({
+    apiVersion = "cert-manager.io/v1"
+    kind       = "ClusterIssuer"
+    metadata = {
+      name = "letsencrypt-prod"
+    }
+    spec = {
+      acme = {
+        server = "https://acme-v02.api.letsencrypt.org/directory"
+        email  = var.cert_manager_email   # ← add this variable
+        privateKeySecretRef = {
+          name = "letsencrypt-prod"
+        }
+        solvers = [{
+          http01 = {
+            ingress = {
+              class = "nginx"
+            }
+          }
+        }]
+      }
+    }
+  })
+
+  # Must wait for cert-manager CRDs and webhook to be ready
+  depends_on = [helm_release.cert_manager]
+}
+
 # ─── EXTERNAL SECRETS ─────────────────────────────────────────────────────────
 
 # IAM Role for external-secrets (IRSA) — allows reading from Secrets Manager
@@ -301,7 +333,7 @@ data "aws_region" "current" {}
 
 resource "helm_release" "nginx_ingress" {
   count = var.enable_nginx_ingress ? 1 : 0
-
+  timeout = 600
   name       = "ingress-nginx"
   repository = "https://kubernetes.github.io/ingress-nginx"
   chart      = "ingress-nginx"

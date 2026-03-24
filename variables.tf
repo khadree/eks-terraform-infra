@@ -206,3 +206,9 @@ variable "external_secrets_version" { default = "0.9.13"  }
 variable "nginx_ingress_version"    { default = "4.10.0"  }
 variable "nginx_replica_count"      { default = 1         }
 variable "nginx_internal"           { default = false      }
+
+
+variable "cert_manager_email" {
+  description = "Email for Let's Encrypt"
+  type        = string
+}

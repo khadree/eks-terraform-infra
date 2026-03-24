@@ -47,6 +47,7 @@ associate_public_ip_address = true
 enable_cert_manager       = true
 enable_external_secrets   = true
 enable_nginx_ingress      = true
+cert_manager_email = "khadreegeorge@gmail.com"
 
 redis = {
   "main-cache" = {

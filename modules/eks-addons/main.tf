@@ -122,7 +122,7 @@ resource "aws_eks_addon" "coredns" {
   })
 
   tags = {
-    Name        = "${var.cluster_name}-coredns"
+    Name        = "${var.project_name}-${var.environment}-coredns"
     Environment = var.environment
   }
 }
@@ -266,7 +266,7 @@ data "aws_iam_policy_document" "aws_lbc_assume" {
 
 resource "aws_iam_role" "aws_lbc" {
   count              = var.enable_aws_load_balancer_controller ? 1 : 0
-  name               = "${var.cluster_name}-aws-lbc-role"
+  name               = "${var.project_name}-${var.environment}-aws-lbc-role"
   assume_role_policy = data.aws_iam_policy_document.aws_lbc_assume[0].json
 }
 

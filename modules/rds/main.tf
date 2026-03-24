@@ -108,9 +108,9 @@ resource "aws_kms_alias" "rds" {
 # Generate a secure random password
 resource "random_password" "db_master" {
   length           = 20
-  special          = true
+  special          = false
   # Explicitly exclude / @ " and space to satisfy RDS requirements
-  override_special = "!#$%&*()-_=+[]{}<>:?" 
+  # override_special = "!#$%&*()-_=+[]{}<>:?" 
 }
 # ─── RDS Instance ─────────────────────────────────────────────────────────────
 
@@ -217,6 +217,6 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
     host     = aws_db_instance.this.address
     port     = var.db_port
     dbname   = var.db_name
-    url      = "postgresql://${var.db_username}:${var.db_password}@${aws_db_instance.this.address}:${var.db_port}/${var.db_name}"
+    url      = "postgresql://${var.db_username}:${random_password.db_master.result}@${aws_db_instance.this.address}:${var.db_port}/${var.db_name}"
   })
 }

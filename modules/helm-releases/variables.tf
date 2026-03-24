@@ -53,7 +53,7 @@ variable "cert_manager_version" {
 variable "external_secrets_version" {
   description = "external-secrets helm chart version"
   type        = string
-  default     = "0.9.13"
+  default     = "0.14.2"
 }
 
 variable "nginx_ingress_version" {
@@ -75,4 +75,10 @@ variable "nginx_internal" {
   description = "Use internal (private) AWS load balancer for nginx"
   type        = bool
   default     = false
+}
+
+
+variable "cert_manager_email" {
+  description = "Email for Let's Encrypt certificate notifications"
+  type        = string
 }
