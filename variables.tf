@@ -202,7 +202,7 @@ variable "port" {
 
 
 variable "cert_manager_version"     { default = "v1.14.4" }
-variable "external_secrets_version" { default = "0.9.13"  }
+variable "external_secrets_version" { default = "0.14.2"  }
 variable "nginx_ingress_version"    { default = "4.10.0"  }
 variable "nginx_replica_count"      { default = 1         }
 variable "nginx_internal"           { default = false      }
