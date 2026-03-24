@@ -1,5 +1,5 @@
 module "helm_releases" {
-  source = "./modules/helm-releases"
+  source            = "./modules/helm-releases"
   project_name      = var.project_name
   environment       = var.environment
   cluster_name      = "${var.project_name}-${var.environment}-cluster"
@@ -7,7 +7,7 @@ module "helm_releases" {
   oidc_provider_url = module.eks.oidc_provider_url
   # Feature flags
   enable_cert_manager     = var.enable_cert_manager
-  cert_manager_email =    var.cert_manager_email
+  cert_manager_email      = var.cert_manager_email
   enable_external_secrets = var.enable_external_secrets
   enable_nginx_ingress    = var.enable_nginx_ingress
   # Chart versions

@@ -47,6 +47,7 @@ associate_public_ip_address = true
 enable_cert_manager       = true
 enable_external_secrets   = true
 enable_nginx_ingress      = true
+enable_cluster_autoscaler = true
 cert_manager_email = "khadreegeorge@gmail.com"
 
 
@@ -65,7 +66,7 @@ rds = {
     instance_class        = "db.t3.medium"
     allocated_storage     = 20
     max_allocated_storage = 100
-    db_name               = "vprofiledb"
+    db_name               = "netacaddb"
     db_username           = "dbadmin"
     db_password           = "" # Use a secret manager in prod
     db_port               = 5432

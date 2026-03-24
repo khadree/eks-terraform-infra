@@ -197,18 +197,24 @@ variable "enable_nginx_ingress" {
 variable "port" {
   description = "Redis port"
   type        = number
-  default = 6379
+  default     = 6379
 }
 
 
-variable "cert_manager_version"     { default = "v1.14.4" }
-variable "external_secrets_version" { default = "0.14.2"  }
-variable "nginx_ingress_version"    { default = "4.10.0"  }
-variable "nginx_replica_count"      { default = 1         }
-variable "nginx_internal"           { default = false      }
+variable "cert_manager_version" { default = "v1.14.4" }
+variable "external_secrets_version" { default = "0.14.2" }
+variable "nginx_ingress_version" { default = "4.10.0" }
+variable "nginx_replica_count" { default = 1 }
+variable "nginx_internal" { default = false }
 
 
 variable "cert_manager_email" {
   description = "Email for Let's Encrypt"
   type        = string
+}
+
+variable "enable_cluster_autoscaler" {
+  description = "Install cluster autoscaler"
+  type        = bool
+  default     = true
 }

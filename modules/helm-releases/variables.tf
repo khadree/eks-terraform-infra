@@ -40,7 +40,11 @@ variable "enable_nginx_ingress" {
   default     = true
 }
 
-
+variable "enable_cluster_autoscaler" {
+  description = "Install cluster autoscaler"
+  type        = bool
+  default     = true
+}
 
 # ─── Versions ─────────────────────────────────────────────────────────────────
 
@@ -62,6 +66,11 @@ variable "nginx_ingress_version" {
   default     = "4.10.0"
 }
 
+variable "cluster_autoscaler_version" {
+  description = "cluster autoscaler helm chart version"
+  type        = string
+  default     = "9.36.0"
+}
 
 # ─── Nginx Config ─────────────────────────────────────────────────────────────
 

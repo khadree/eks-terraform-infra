@@ -30,6 +30,16 @@ resource "kubernetes_namespace" "ingress_nginx" {
   }
 }
 
+resource "kubernetes_namespace" "cluster_autoscaler" {
+  count = var.enable_cluster_autoscaler ? 1 : 0
+  metadata {
+    name = "cluster-autoscaler"
+    labels = {
+      "app.kubernetes.io/managed-by" = "terraform"
+    }
+  }
+}
+
 # ─── METRICS SERVER ───────────────────────────────────────────────────────────
 # Required for HPA (Horizontal Pod Autoscaler) to read CPU and memory metrics
 
@@ -390,4 +400,94 @@ resource "helm_release" "nginx_ingress" {
   depends_on = [kubernetes_namespace.ingress_nginx]
 }
 
+# ─── CLUSTER AUTOSCALER ───────────────────────────────────────────────────────
 
+data "aws_iam_policy_document" "cluster_autoscaler_assume" {
+  count = var.enable_cluster_autoscaler ? 1 : 0
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [var.oidc_provider_arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(var.oidc_provider_url, "https://", "")}:sub"
+      values   = ["system:serviceaccount:cluster-autoscaler:cluster-autoscaler"]
+    }
+  }
+}
+
+resource "aws_iam_role" "cluster_autoscaler" {
+  count              = var.enable_cluster_autoscaler ? 1 : 0
+  name               = "${var.cluster_name}-cluster-autoscaler"
+  assume_role_policy = data.aws_iam_policy_document.cluster_autoscaler_assume[0].json
+}
+
+resource "aws_iam_role_policy" "cluster_autoscaler" {
+  count = var.enable_cluster_autoscaler ? 1 : 0
+  name  = "${var.cluster_name}-cluster-autoscaler-policy"
+  role  = aws_iam_role.cluster_autoscaler[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "autoscaling:DescribeAutoScalingGroups",
+          "autoscaling:DescribeAutoScalingInstances",
+          "autoscaling:DescribeLaunchConfigurations",
+          "autoscaling:DescribeScalingActivities",
+          "autoscaling:DescribeTags",
+          "autoscaling:SetDesiredCapacity",
+          "autoscaling:TerminateInstanceInAutoScalingGroup",
+          "ec2:DescribeLaunchTemplateVersions",
+          "ec2:DescribeInstanceTypes"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "helm_release" "cluster_autoscaler" {
+  count = var.enable_cluster_autoscaler ? 1 : 0
+
+  name       = "cluster-autoscaler"
+  repository = "https://kubernetes.github.io/autoscaler"
+  chart      = "cluster-autoscaler"
+  version    = var.cluster_autoscaler_version
+  namespace  = kubernetes_namespace.cluster_autoscaler[0].metadata[0].name
+
+  set {
+    name  = "autoDiscovery.clusterName"
+    value = var.cluster_name
+  }
+
+  set {
+    name  = "rbac.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = aws_iam_role.cluster_autoscaler[0].arn
+  }
+
+  values = [
+    yamlencode({
+      resources = {
+        requests = { cpu = "100m", memory = "128Mi" }
+        limits   = { cpu = "100m", memory = "256Mi" }
+      }
+      extraArgs = {
+        balance-similar-node-groups  = true
+        skip-nodes-with-system-pods  = false
+        scale-down-delay-after-add   = "5m"
+        scale-down-unneeded-time     = "5m"
+      }
+    })
+  ]
+
+  depends_on = [kubernetes_namespace.cluster_autoscaler]
+}

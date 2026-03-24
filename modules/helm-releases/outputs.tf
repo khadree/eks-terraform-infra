@@ -12,3 +12,8 @@ output "external_secrets_role_arn" {
   description = "IAM role ARN for external-secrets"
   value       = var.enable_external_secrets ? aws_iam_role.external_secrets[0].arn : null
 }
+
+output "cluster_autoscaler_role_arn" {
+  description = "IAM role ARN for cluster autoscaler"
+  value       = var.enable_cluster_autoscaler ? aws_iam_role.cluster_autoscaler[0].arn : null
+}
