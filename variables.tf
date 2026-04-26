@@ -107,7 +107,7 @@ variable "node_min_size" {
 
 
 variable "redis" {
-  description = "Map of EKS cluster to create (keyed by instance id/name)."
+  description = "Map of Redis instances to create (keyed by instance id/name)."
   type        = map(any)
   default     = {}
 }
