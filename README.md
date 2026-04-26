@@ -17,7 +17,7 @@ A production-ready Infrastructure as Code (IaC) setup to deploy a fully featured
 * Verify Everything Is Running
 * Tear Down
 * Security Considerations
-* Troubleshooting
+
 
 ## **🏗 Architecture Overview**
 
@@ -187,7 +187,7 @@ teleios-infra-eks/
 **Three fully isolated environments, each with its own Terraform Cloud workspace, state file, AWS credentials, and variable set.**
 
 | Setting | Dev | Stagging | Prod |
-| ----------- | ----------- | ---------- |
+| ----------- | ----------- | ---------- | ---------- |
 | VPC CIDR |10.0.0.0/16 | 10.1.0.0/16 | 10.2.0.0/16 |
 | Node type | t3.medium | t3.large | t3.xlarge |
 | Node count |  1–2 | 1–4 | 2–10 |
@@ -198,4 +198,167 @@ teleios-infra-eks/
 | Deletion protection | ❌ | ✅ | ✅ |
 | Backup retention | 1 day |  3 days | 7 days |
 
+## **☁️ Terraform Cloud**
 
+**Workspace Setup**
+**Three CLI-driven workspaces in the Teleios organization, all tagged with teleios-kadiri:**
+
+
+| Workspace |Tags | Auto Apply |
+| ----------- | ----------- | ---------- |
+| teleios-kadiri-dev | teleios-kadiri, dev| ✅ Yes |
+| teleios-kadiri-staging | teleios-kadiri, staging | ❌ No |
+| teleios-kadiri-prod | teleios-kadiri, prod | ❌ No |
+
+backend.tf
+
+terraform {
+  cloud {
+    organization = "Teleios"
+    workspaces {
+      tags = ["teleios-kadiri"]   # Shared tag across all 3 workspaces
+    }
+  }
+}
+
+## **Workspace Variables (set in TFC UI per workspace)**
+**Environment Variables (mark all Sensitive):**
+
+AWS_ACCESS_KEY_ID       = <env-specific-key>
+AWS_SECRET_ACCESS_KEY   = <env-specific-secret>
+AWS_DEFAULT_REGION      = us-east-1
+
+## **🚀 Getting Started**
+
+1. Clone the Repository
+git clone https://github.com/your-org/teleios-infra-eks.git
+cd teleios-infra-eks
+
+2. Download LBC IAM Policy (one-time setup)
+mkdir -p modules/eks-addons/policies
+
+curl -o modules/eks-addons/policies/aws-load-balancer-controller-policy.json \
+  https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json
+
+3. Login to Terraform Cloud
+terraform login
+
+4. Initialize Terraform
+terraform init
+
+# When prompted, select: teleios-kadiri-dev
+
+5. Plan
+terraform plan -var-file="environments/dev.tfvars"
+6. Apply
+terraform apply -var-file="environments/dev.tfvars"
+
+## **⚙️ Configuration**
+Environment tfvars Example
+# environments/dev.tfvars
+
+environment               = "dev"
+region                    = "us-east-1"
+cluster_name              = "teleios-kadiri-dev"
+cluster_version           = "1.29"
+vpc_cidr                  = "10.0.0.0/16"
+node_instance_types       = ["t3.medium"]
+node_desired_size         = 1
+node_min_size             = 1
+node_max_size             = 2
+db_name                   = "appdb"
+db_username               = "dbadmin"
+db_instance_class         = "db.t3.medium"
+multi_az                  = false
+deletion_protection       = false
+skip_final_snapshot       = true
+backup_retention_days     = 1
+enable_efs                = false
+enable_cert_manager       = true
+enable_external_secrets   = true
+enable_nginx_ingress      = true
+enable_cluster_autoscaler = true
+
+## **Switching Environments**
+# Dev
+export TF_WORKSPACE="teleios-kadiri-dev"
+terraform apply -var-file="environments/dev.tfvars"
+
+# Staging
+export TF_WORKSPACE="teleios-kadiri-staging"
+terraform apply -var-file="environments/staging.tfvars"
+
+# Prod
+export TF_WORKSPACE="teleios-kadiri-prod"
+terraform apply -var-file="environments/prod.tfvars"
+
+## **Setting the DB Password Securely**
+
+Never store the DB password in tfvars files. Use one of these approaches:
+
+# Option A: environment variable
+export TF_VAR_db_password="YourStr0ngP@ssword!"
+terraform apply -var-file="environments/dev.tfvars"
+
+# Option B: set as a sensitive Terraform variable in the TFC workspace UI
+
+## **📦 Deployment Order**
+Terraform handles depends_on automatically, but here is the logical flow:
+
+```
+1. VPC
+       │  networking foundation
+       ▼
+2. EKS Cluster + Node Group
+       │  compute layer
+       ▼
+3. RDS PostgreSQL
+       │  database layer
+       ▼
+4. EKS Core Addons (vpc-cni, coredns, kube-proxy)
+       │  cluster cannot function without these
+       ▼
+5. EKS Storage Addons (ebs-csi, efs-csi)
+       │  required before stateful workloads
+       ▼
+6. AWS Load Balancer Controller
+       │  required before any Ingress works
+       ▼
+7. Observability Addons (cloudwatch, guardduty)
+       │
+       ▼
+8. Helm Charts (cert-manager, external-secrets, nginx, autoscaler, metrics-server)
+       │  depend on healthy core addons
+       ▼
+9. Application Workloads
+
+```
+## **Connecting to the Cluster**
+
+After a successful apply, configure kubectl:
+aws eks update-kubeconfig \
+  --region us-east-1 \
+  --name teleios-kadiri-dev
+
+## **Tear Down**
+
+export TF_WORKSPACE="teleios-kadiri-dev"
+terraform destroy -var-file="environments/dev.tfvars"
+
+## **🔒 Security Considerations**
+
+| Area| Implementation |
+| ----------- | ----------- |
+| Private nodes | Worker nodes in private subnets, never directly internet-accessible |
+| Private RDS |  Database only reachable from EKS node security group |
+| KMS encryption | RDS and Secrets Manager encrypted with rotating KMS keys |
+| Secrets Manager | DB credentials never stored in Terraform state or tfvars |
+| IRSA | Each addon uses its own scoped IAM role per service account |
+| OIDC | Pod-level AWS permissions without node-level IAM sprawl |
+| State security | State stored encrypted in Terraform Cloud |
+| Audit logging | EKS control plane logs api, audit, authenticator, controller, scheduler |
+| Container Insights | CloudWatch observability addon for metrics and log collection |
+| GuardDuty | Runtime threat detection enabled in prod |
+| TLS  | cert-manager auto-provisions Let's Encrypt certificates |
+| NLB | Nginx ingress backed by AWS NLB for production traffic handling |
+| Separate credentials | Each environment uses its own AWS IAM credentials |
