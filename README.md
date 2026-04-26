@@ -1,6 +1,6 @@
 ## **Teleios EKS Infrastructure**
 
-A production-ready Infrastructure as Code (IaC) setup to deploy a fully featured Amazon EKS cluster on AWS using Terraform. Includes VPC networking, EKS cluster, RDS PostgreSQL, EKS managed addons, Helm chart dependencies, multi-environment support via Terraform Cloud, and remote state management.
+A production-ready Infrastructure as Code (IaC) setup to deploy a fully featured Amazon EKS cluster on AWS using Terraform. Includes VPC networking, EKS cluster, RDS PostgreSQL, Redis, EKS managed addons, Helm chart dependencies, multi-environment support via Terraform Cloud, and remote state management.
 
 ## **📑 Table of Contents**
 
@@ -22,6 +22,8 @@ A production-ready Infrastructure as Code (IaC) setup to deploy a fully featured
 ## **🏗 Architecture Overview**
 
 **AWS Cloud**
+
+```
 ┌────────────────────────────────────────────────────────────────────┐
 │                        VPC (per environment)                       │
 │   dev: 10.0.0.0/16  |  staging: 10.1.0.0/16  |  prod: 10.2.0.0/16  │
@@ -53,12 +55,16 @@ A production-ready Infrastructure as Code (IaC) setup to deploy a fully featured
 │   │   cluster-autoscaler | metrics-server                    │     │
 │   └──────────────────────────────────────────────────────────┘     │
 └────────────────────────────────────────────────────────────────────┘
+```
 
 Terraform Cloud Workspaces:
+
+```
 ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐
 │  teleios-kadiri-dev  │  │teleios-kadiri-staging│  │ teleios-kadiri-prod  │
 │  (auto-apply)        │  │  (manual approve)    │  │  (manual approve)    │
 └──────────────────────┘  └──────────────────────┘  └──────────────────────┘
+```
 
 ## **What Gets Deployed**
 
@@ -115,14 +121,15 @@ curl -o modules/eks-addons/policies/aws-load-balancer-controller-policy.json \
 
 ## **📁 Project Structure**
 
+```
 teleios-infra-eks/
 ├── ec2.tf                        # For Ec2 — wires all modules together.
 ├── eks.tf                         # For EKS module
 ├── rds.tf                         # for RDS module
-├── redis.tf                        # For redis module
-├── helm-release.tf                 # For helm-release module
-├── vpc.tf                          # For VPC module
-├── s3.tf                           # For S3 module
+├── redis.tf                       # For redis module
+├── helm-release.tf                # For helm-release module
+├── vpc.tf                         # For VPC module
+├── s3.tf                          # For S3 module
 ├── variables.tf                   # Root input variables
 ├── outputs.tf                     # Root outputs
 ├── versions.tf                    # Provider and Terraform version constraints
@@ -158,24 +165,27 @@ teleios-infra-eks/
     │   └── policies/
     │       └── aws-load-balancer-controller-policy.json
     │
-    └── helm-release/                      # cert-manager, external-secrets, nginx, autoscaler, metrics-server
-    |    ├── main.tf
-    |    ├── variables.tf
-    |    └── outputs.tf
-    |
-    ├── redis/                       # Redis Cluster aws_elasticache_replication_group
+    ├── helm-release/              # cert-manager, external-secrets, nginx, etc.
     │   ├── main.tf
     │   ├── variables.tf
     │   └── outputs.tf
     │
-    ├── s3/                       # S3 buckets 
-       ├── main.tf
+    ├── redis/                     # Redis Cluster
+    │   ├── main.tf
+    │   ├── variables.tf
+    │   └── outputs.tf
+    │
+    └── s3/                        # S3 buckets 
+        ├── main.tf
         ├── variables.tf
         └── outputs.tf
+```
+
     
 ## **🌍 Multi-Environment Setup**
 
 **Three fully isolated environments, each with its own Terraform Cloud workspace, state file, AWS credentials, and variable set.**
+
 | Setting | Dev | Stagging | Prod |
 | ----------- | ----------- | ---------- |
 | VPC CIDR |10.0.0.0/16 | 10.1.0.0/16 | 10.2.0.0/16 |
@@ -184,15 +194,8 @@ teleios-infra-eks/
 | Multi-AZ RDS | ❌| ❌ | ✅ |
 | Node type | t3.medium | t3.large | t3.xlarge |
 | Node count |  1–2 | 1–4 | 2–10 |
+| GuardDuty | ❌ | ❌ | ✅ |
+| Deletion protection | ❌ | ✅ | ✅ |
+| Backup retention | 1 day |  3 days | 7 days |
 
 
-SettingDevStagingProdVPC CIDR10.0.0.0/1610.1.0.0/1610.2.0.0/16
-Node typet3.medium t3.large t3.xlarge
-Node count 1–2 1–4 2–10
-RDS instance db.t3.medium db.t3.large db.r6g.large
-Multi-AZ RDS  ❌ ✅
-GuardDuty❌❌✅
-EFS storage❌❌✅
-Deletion protection❌✅✅
-Auto-apply✅❌❌
-Backup retention1 day3 days7 days
