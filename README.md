@@ -24,7 +24,7 @@ A production-ready Infrastructure as Code (IaC) setup to deploy a fully featured
 **AWS Cloud**
 ┌────────────────────────────────────────────────────────────────────┐
 │                        VPC (per environment)                       │
-│   dev: 10.0.0.0/16  |  staging: 10.1.0.0/16  |  prod: 10.2.0.0/16│
+│   dev: 10.0.0.0/16  |  staging: 10.1.0.0/16  |  prod: 10.2.0.0/16  │
 │                                                                    │
 │  ┌─────────────────────────────────────────────────────────────┐   │
 │  │                  3 Availability Zones                       │   │
@@ -34,7 +34,7 @@ A production-ready Infrastructure as Code (IaC) setup to deploy a fully featured
 │  │   │ NAT Gateway │────────────►│  EKS Managed Node Group  │  │   │
 │  │   │  (per AZ)   │             │  (EC2 worker nodes)      │  │   │
 │  │   └──────┬──────┘             └──────────────────────────┘  │   │
-│  │          │                                                   │   │
+│  │          │                                                  │   │
 │  │   ┌──────▼──────┐             ┌──────────────────────────┐  │   │
 │  │   │  Internet   │             │     RDS PostgreSQL       │  │   │
 │  │   │  Gateway    │             │  (private subnets only)  │  │   │
@@ -43,7 +43,7 @@ A production-ready Infrastructure as Code (IaC) setup to deploy a fully featured
 │                                                                    │
 │   ┌──────────────────────────────────────────────────────────┐     │
 │   │              EKS Control Plane (AWS Managed)             │     │
-│   │   vpc-cni | coredns | kube-proxy | ebs-csi | efs-csi    │     │
+│   │   vpc-cni | coredns | kube-proxy | ebs-csi | efs-csi     │     │
 │   │   cloudwatch-observability | aws-load-balancer-controller│     │
 │   └──────────────────────────────────────────────────────────┘     │
 │                                                                    │
@@ -56,8 +56,8 @@ A production-ready Infrastructure as Code (IaC) setup to deploy a fully featured
 
 Terraform Cloud Workspaces:
 ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐
-│  teleios-kadiri-dev  │  │teleios-kadiri-staging │  │ teleios-kadiri-prod  │
-│  (auto-apply)        │  │  (manual approve)     │  │  (manual approve)    │
+│  teleios-kadiri-dev  │  │teleios-kadiri-staging│  │ teleios-kadiri-prod  │
+│  (auto-apply)        │  │  (manual approve)    │  │  (manual approve)    │
 └──────────────────────┘  └──────────────────────┘  └──────────────────────┘
 
 ## **What Gets Deployed**
@@ -90,10 +90,10 @@ Terraform Cloud Workspaces:
 ## **AWS Credentials**
 
 aws configure
-# AWS Access Key ID:     <your-access-key>
-# AWS Secret Access Key: <your-secret-key>
-# Default region:        us-east-1
-# Default output format: json
+AWS Access Key ID:     <your-access-key>
+AWS Secret Access Key: <your-secret-key>
+Default region:        us-east-1
+Default output format: json
 
 ## **Your IAM user/role needs these permissions:**
 
@@ -169,11 +169,30 @@ teleios-infra-eks/
     │   └── outputs.tf
     │
     ├── s3/                       # S3 buckets 
-    │   ├── main.tf
-    │   ├── variables.tf
-    │   └── outputs.tf
+       ├── main.tf
+        ├── variables.tf
+        └── outputs.tf
     
+## **🌍 Multi-Environment Setup**
+
+**Three fully isolated environments, each with its own Terraform Cloud workspace, state file, AWS credentials, and variable set.**
+| Setting | Dev | Stagging | Prod |
+| ----------- | ----------- | ---------- |
+| VPC CIDR |10.0.0.0/16 | 10.1.0.0/16 | 10.2.0.0/16 |
+| Node type | t3.medium | t3.large | t3.xlarge |
+| Node count |  1–2 | 1–4 | 2–10 |
+| Multi-AZ RDS | ❌| ❌ | ✅ |
+| Node type | t3.medium | t3.large | t3.xlarge |
+| Node count |  1–2 | 1–4 | 2–10 |
 
 
-
-
+SettingDevStagingProdVPC CIDR10.0.0.0/1610.1.0.0/1610.2.0.0/16
+Node typet3.medium t3.large t3.xlarge
+Node count 1–2 1–4 2–10
+RDS instance db.t3.medium db.t3.large db.r6g.large
+Multi-AZ RDS  ❌ ✅
+GuardDuty❌❌✅
+EFS storage❌❌✅
+Deletion protection❌✅✅
+Auto-apply✅❌❌
+Backup retention1 day3 days7 days
