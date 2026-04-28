@@ -362,3 +362,9 @@ terraform destroy -var-file="environments/dev.tfvars"
 | TLS  | cert-manager auto-provisions Let's Encrypt certificates |
 | NLB | Nginx ingress backed by AWS NLB for production traffic handling |
 | Separate credentials | Each environment uses its own AWS IAM credentials |
+
+
+
+**Author**: Kadiri George 
+**Version**: 1.0.0  
+**Last Updated**: April 2026
