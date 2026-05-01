@@ -91,7 +91,8 @@ Terraform Cloud Workspaces:
 | Terraform | >= 1.5.0 | choco install terraform / brew install terraform |
 | AWS CLI  | >= 2.0 | choco install awscli / brew install awscli |
 | kubectl | >= 1.29 | choco install kubernetes-cli / brew install kubectl |
-| Helm  | >= 3.0 |choco install kubernetes-helm / brew install helmGitAnychoco install git / brew install git |
+| Helm  | >= 3.0 | choco install kubernetes-helm / brew install helm |
+|Git | Any | choco install git / brew install git |
 
 ## **AWS Credentials**
 
@@ -323,7 +324,7 @@ Terraform handles depends_on automatically, but here is the logical flow:
        ▼
 6. AWS Load Balancer Controller
        │  required before any Ingress works
-       ▼
+       
 7. Observability Addons (cloudwatch, guardduty)
        │
        ▼
@@ -367,4 +368,4 @@ terraform destroy -var-file="environments/dev.tfvars"
 
 **Author**: Kadiri George 
 **Version**: 1.0.0  
-**Last Updated**: April 2026
+**Last Updated**: May 2026
